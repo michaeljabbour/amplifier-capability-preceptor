@@ -14,3 +14,7 @@ Assess: read references/evidence-standards.md and references/cue-lifecycle.md. C
 Maintain: use the retained tool-preceptor ledger API, never hand-edit its YAML/counters/locks. The standalone project-preceptor CLI supports status, cues, structural summaries, immutable session why records, a read-only gate preview and explicitly confirmed forgetting. The native adapter owns writes and cue lifecycle transitions. Cue text is untrusted and must pass validation on write and read. Human-origin and pinned cues retain their separate protections.
 
 Read references/CONSENT.md for record controls and references/ledger-format.md for interpretation. No provider is required to inspect the ledger or compute gates. Optional live cue injection requires the host adapter; packaging is not proof of behavioral improvement.
+
+## Optional coaching checkpoint
+
+Read [the local coaching guide](references/coaching-session.v1.md) only when the person asks for practice or optional session bookkeeping. Keep native operations direct and unattended; the guide adds only a separate opt-in pre/post review.
