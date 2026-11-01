@@ -62,14 +62,19 @@ release, and this one will change weekly.
 ## Where it lives, and for how long
 
 `~/.amplifier/projects/{project}/preceptor/observations/<session_id>.jsonl` — local, never
-transmitted. Observation records are deleted after `retention_days` (default 90).
-The derived ledger persists beyond that observation-retention window; treat it as
-private and potentially sensitive. Enable observation only with explicit consent
+transmitted. At each enabled mount, a best-effort retention sweep removes
+observation `.jsonl` files whose filesystem modification time is older than
+`retention_days` (default 90). This is a file-age check at mount, not a scheduled
+per-record deletion deadline. Files can remain if no later enabled mount occurs
+or deletion fails. The derived ledger is not covered by this sweep and persists;
+treat it as private and potentially sensitive. Enable observation only with explicit consent
 for the work being observed, keep collection minimal, and periodically review
 whether retained ledger entries and cues are still needed. Use the documented
 controls below to stop recording or revoke observation evidence; do not edit the
 ledger YAML directly. The observation-retention setting does not delete the
-derived ledger or make its contents anonymous.
+derived ledger or make its contents anonymous. Storage location and access
+protections are the operator's responsibility; do not assume encryption or
+enforced private permissions from the retention setting.
 
 `{project}` is the session's absolute working directory with path separators replaced by `-`,
 matching Amplifier core's own `~/.amplifier/projects/` convention: a session in
