@@ -12,7 +12,7 @@ filesystem.
 Turning it on is a deliberate act — you choose a different bundle:
 
 ```bash
-amplifier run --bundle 'git+https://github.com/michaeljabbour/amplifier-bundle-preceptor@main#subdirectory=bundles/observe-on.yaml'
+amplifier run --bundle 'git+https://github.com/michaeljabbour/amplifier-capability-preceptor@main#subdirectory=bundles/observe-on.yaml'
 ```
 
 **There is no settings-file stanza, on purpose.** An earlier draft documented one
@@ -62,8 +62,14 @@ release, and this one will change weekly.
 ## Where it lives, and for how long
 
 `~/.amplifier/projects/{project}/preceptor/observations/<session_id>.jsonl` — local, never
-transmitted. Deleted after `retention_days` (default 90). The derived ledger is not sensitive
-and persists.
+transmitted. Observation records are deleted after `retention_days` (default 90).
+The derived ledger persists beyond that observation-retention window; treat it as
+private and potentially sensitive. Enable observation only with explicit consent
+for the work being observed, keep collection minimal, and periodically review
+whether retained ledger entries and cues are still needed. Use the documented
+controls below to stop recording or revoke observation evidence; do not edit the
+ledger YAML directly. The observation-retention setting does not delete the
+derived ledger or make its contents anonymous.
 
 `{project}` is the session's absolute working directory with path separators replaced by `-`,
 matching Amplifier core's own `~/.amplifier/projects/` convention: a session in
@@ -111,7 +117,7 @@ Open question, and the two options are not variants of one design.
 | | Per-user, local | Per-project, shared |
 |---|---|---|
 | Evidence quality | Thin, slow to converge | Strong, fast |
-| Consent model | Implicit is acceptable | **Explicit and revocable, required** |
+| Consent model | **Explicit and revocable, required** | **Explicit and revocable, required** |
 | Failure mode | Underpowered | **Performance-adjacent artifact** |
 
 In a small team, a session id plus commit timing deanonymizes trivially. A shared ledger then
@@ -119,8 +125,10 @@ becomes a record of whose sessions needed the most correcting — and even if no
 read it that way, its *availability* changes behavior. People route risky work outside the
 observed harness, which harms them and poisons the evidence at the same time.
 
-**If you share:** share the derived ledger, keep the raw observations local and pseudonymous,
-and never record which team member produced an observation.
+**If you share:** do so only with explicit, revocable consent. Review the derived
+ledger for identifying patterns; being derived does not make it anonymous. Keep
+raw observations local and pseudonymous, and never record which team member
+produced an observation.
 
 **Watch `observed-session share`** — the fraction of a consenting developer's work done inside
 the observed harness. A falling share is the signature of a chilling effect. Treat it as a
