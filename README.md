@@ -2,11 +2,11 @@
 
 Keep agent guidance that earns its place.
 
-Watch the [70-second film](https://michaeljabbour.github.io/amplifier-skill-preceptor/#film): an agent weighed down by rules nobody checks, and how the skill tests one small cue before it joins the pack. The example in it is fictional.
+Watch the [70-second film](https://michaeljabbour.github.io/amplifier-capability-preceptor/#film): an agent weighed down by rules nobody checks, and how the skill tests one small cue before it joins the pack. The example in it is fictional.
 
 For people maintaining an agent’s recurring instructions. Preceptor turns repeated corrections into small testable cues, compares cue and no-cue behavior, and keeps inconclusive evidence from becoming permanent guidance.
 
-[Explore the site](https://michaeljabbour.github.io/amplifier-skill-preceptor/)
+[Explore the site](https://michaeljabbour.github.io/amplifier-capability-preceptor/)
 
 ## What you get
 
@@ -17,8 +17,8 @@ For people maintaining an agent’s recurring instructions. Preceptor turns repe
 ## Start here
 
 ```sh
-git clone https://github.com/michaeljabbour/amplifier-skill-preceptor.git
-cd amplifier-skill-preceptor
+git clone https://github.com/michaeljabbour/amplifier-capability-preceptor.git
+cd amplifier-capability-preceptor
 python3 scripts/capability.py install --dest ~/.agents/skills
 ```
 
@@ -164,7 +164,7 @@ Start by watching. That is not ceremony — it is the thesis applied to the bund
 rollout.
 
 ```bash
-amplifier run --bundle 'git+https://github.com/michaeljabbour/amplifier-skill-preceptor@main#subdirectory=bundles/observe-only.yaml'
+amplifier run --bundle 'git+https://github.com/michaeljabbour/amplifier-capability-preceptor@main#subdirectory=bundles/observe-only.yaml'
 ```
 
 That bundle **records nothing.** The observer ships `enabled: false`, so the command above
@@ -172,7 +172,7 @@ verifies the bundle loads and does no more. Recording starts only when you choos
 whose name says so:
 
 ```bash
-amplifier run --bundle 'git+https://github.com/michaeljabbour/amplifier-skill-preceptor@main#subdirectory=bundles/observe-on.yaml'
+amplifier run --bundle 'git+https://github.com/michaeljabbour/amplifier-capability-preceptor@main#subdirectory=bundles/observe-on.yaml'
 ```
 
 Picking that bundle *is* the consent act. There is deliberately no settings-file stanza —
@@ -182,7 +182,7 @@ no way to tell which), and a consent control that fails silently is worse than n
 Run it for a couple of weeks. Read what it saw. *Then* decide whether the rest is warranted:
 
 ```bash
-amplifier run --bundle git+https://github.com/michaeljabbour/amplifier-skill-preceptor@main
+amplifier run --bundle git+https://github.com/michaeljabbour/amplifier-capability-preceptor@main
 ```
 
 ## What you actually see
