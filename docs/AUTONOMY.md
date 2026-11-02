@@ -29,6 +29,15 @@ fade_attempts >= min_fade_attempts        (default 40)
 false_fade_rate < false_fade_ceiling      (default 0.10)
 ```
 
+Authority switches require actual booleans: quoted `"false"` and `"true"` grant
+neither write access nor autonomy. Counts must be nonnegative integers, with a
+positive configured minimum and no more restores than attempts. Rates and the
+ceiling must be finite numbers between 0 and 1. Both the stored rate and the rate
+derived from the counters must be below the ceiling, so rounding cannot hide
+restores. Missing measurements, corrupt state files, and unsupported state
+versions keep autonomy locked. A new ledger starts with zero counters and an
+uncalibrated detector; an existing partial file gains no default evidence.
+
 `false_fade_rate = shadow_restores / fade_attempts` is recomputed after every counter change,
 so the lock can **re-engage by itself** if the rate climbs. That is correct behavior, not a
 regression.

@@ -207,6 +207,15 @@ requires **all four** of:
 3. `state.fade_attempts >= min_fade_attempts` (default `40`)
 4. `state.false_fade_rate < false_fade_ceiling` (default `0.10`)
 
+`writable` and `autonomous` require actual boolean `true`; quoted strings do
+not grant authority. Measured counters must be nonnegative integers, the
+configured minimum must be positive, and restores cannot exceed attempts.
+Rates and ceilings must be finite numbers between 0 and 1. The counter-derived
+rate must also stay below the ceiling, including when the stored rate is rounded.
+Missing measured fields in an existing state file, corrupt files, and unsupported
+state versions keep autonomy locked. Fresh ledgers still initialize zero counters
+with an uncalibrated detector for normal recording.
+
 Everything else that writes (`propose_cue`, `shadow_cue`, `restore_cue`,
 `pin_cue`, `mute_cue`, `log_assessment`, `forget`) is gated only by
 `writable`, not by autonomy -- these are either low-stakes forward steps,
@@ -222,7 +231,7 @@ reason, for a human to review:
 ```json
 {
   "locked": true,
-  "reason": "autonomous is false in configuration -- ...",
+  "reason": "autonomous is not boolean true in configuration -- ...",
   "proposed_diff": { "id": "cue-017", "status": "active", "entry_evidence": "run-91c", ... }
 }
 ```

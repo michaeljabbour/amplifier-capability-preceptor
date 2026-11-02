@@ -500,14 +500,24 @@ def _default_state() -> dict[str, Any]:
 
 
 def read_state(root: Path) -> dict[str, Any]:
+    """Initialize a new ledger, but never invent evidence in an existing one.
+
+    Missing fields in a stored state must reach the authority gate as missing.
+    Corrupt or unsupported storage carries no usable evidence and stays locked.
+    """
     path = state_path(root)
     if not path.exists():
         return _default_state()
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    merged = _default_state()
-    merged.update(data)
-    return merged
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError, UnicodeError):
+        logger.warning("preceptor: unreadable state; autonomy remains locked")
+        return {}
+    if not isinstance(data, dict) or type(data.get("v")) is not int or data["v"] != 1:
+        logger.warning("preceptor: unsupported state schema; autonomy remains locked")
+        return {}
+    return data
 
 
 def write_state(root: Path, state: dict[str, Any]) -> None:
@@ -529,12 +539,17 @@ def update_state(
     correct behavior, not a bug)."""
     with _locked(state_path(root)):
         state = read_state(root)
-        state["fade_attempts"] = (
-            int(state.get("fade_attempts", 0)) + fade_attempts_delta
-        )
-        state["shadow_restores"] = (
-            int(state.get("shadow_restores", 0)) + shadow_restores_delta
-        )
+        for field, delta in (
+            ("fade_attempts", fade_attempts_delta),
+            ("shadow_restores", shadow_restores_delta),
+        ):
+            if not gates.is_counter(state.get(field)) or not gates.is_counter(delta):
+                raise LedgerError(
+                    f"{field} and its delta must be nonnegative integers; "
+                    "invalid history cannot be converted into measured evidence."
+                )
+        state["fade_attempts"] += fade_attempts_delta
+        state["shadow_restores"] += shadow_restores_delta
         state["false_fade_rate"] = gates.compute_false_fade_rate(
             state["shadow_restores"], state["fade_attempts"]
         )

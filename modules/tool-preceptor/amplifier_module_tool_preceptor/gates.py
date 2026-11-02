@@ -17,7 +17,8 @@ context/methodology/evidence-standards.md for the full rationale.
 
 from __future__ import annotations
 
-from typing import Any
+import math
+from typing import Any, cast
 
 # Minimum bar for any comparison used as a gate (evidence-standards.md):
 # "n >= 5 runs per arm | One run per side measures noise."
@@ -65,6 +66,16 @@ def compute_false_fade_rate(shadow_restores: int, fade_attempts: int) -> float:
     return shadow_restores / fade_attempts
 
 
+def is_counter(value: Any) -> bool:
+    """A measured count is a nonnegative integer, never a boolean or coercion."""
+    return type(value) is int and value >= 0
+
+
+def _is_rate(value: Any) -> bool:
+    """Only finite numeric proportions are measurements (bool is an int subclass)."""
+    return type(value) in (int, float) and 0 <= value <= 1 and math.isfinite(value)
+
+
 def autonomy_unlocked(state: dict[str, Any], cfg: dict[str, Any]) -> tuple[bool, str]:
     """Whether promote_cue/retire_cue may apply automatically, and why (or why not).
 
@@ -82,30 +93,74 @@ def autonomy_unlocked(state: dict[str, Any], cfg: dict[str, Any]) -> tuple[bool,
     not a bug: an uncalibrated counter is an opinion with more decimal
     places, and gating on it would make the system commit the failure it
     exists to catch.
+
+    Configuration and persisted evidence are untrusted. Do not coerce strings,
+    floats, or booleans into measurements, or supply a missing measured rate.
+    Both the stored rate and the rate derived from valid counters must be below
+    the ceiling; rounded stored rates remain valid, but cannot hide restores.
     """
-    if not cfg.get("autonomous", False):
+    if not isinstance(state, dict) or not isinstance(cfg, dict):
+        return False, "autonomy requires state and configuration objects."
+
+    if cfg.get("autonomous") is not True:
         return False, (
-            "autonomous is false in configuration -- promotion and retirement require "
+            "autonomous is not boolean true in configuration -- promotion and retirement require "
             "human approval until autonomy is explicitly enabled."
         )
 
-    if not state.get("detector_calibrated", False):
+    if state.get("detector_calibrated") is not True:
         return False, (
-            "detector_calibrated is false -- the opportunity/violation detector has not "
+            "detector_calibrated is not boolean true -- the opportunity/violation detector has not "
             "been scored against hand-labeled ground truth. An uncalibrated counter is an "
             "opinion with more decimal places, not evidence."
         )
 
-    fade_attempts = int(state.get("fade_attempts", 0))
-    min_fade_attempts = int(cfg.get("min_fade_attempts", 40))
+    fade_attempts = state.get("fade_attempts")
+    shadow_restores = state.get("shadow_restores")
+    min_fade_attempts = cfg.get("min_fade_attempts", 40)
+    for field, value in (
+        ("fade_attempts", fade_attempts),
+        ("shadow_restores", shadow_restores),
+        ("min_fade_attempts", min_fade_attempts),
+    ):
+        if not is_counter(value):
+            return (
+                False,
+                f"{field} must be a nonnegative integer -- autonomy remains locked.",
+            )
+    fade_attempts = cast(int, fade_attempts)
+    shadow_restores = cast(int, shadow_restores)
+    if min_fade_attempts == 0:
+        return (
+            False,
+            "min_fade_attempts must be positive -- measured history is required.",
+        )
+    if shadow_restores > fade_attempts:
+        return (
+            False,
+            "shadow_restores exceeds fade_attempts -- trust counters are inconsistent.",
+        )
     if fade_attempts < min_fade_attempts:
         return False, (
             f"fade_attempts ({fade_attempts}) is below min_fade_attempts "
             f"({min_fade_attempts}) -- not enough history yet to trust the false-fade rate."
         )
 
-    false_fade_rate = float(state.get("false_fade_rate", 0.0))
-    ceiling = float(cfg.get("false_fade_ceiling", 0.10))
+    false_fade_rate = state.get("false_fade_rate")
+    ceiling = cfg.get("false_fade_ceiling", 0.10)
+    for field, value in (
+        ("false_fade_rate", false_fade_rate),
+        ("false_fade_ceiling", ceiling),
+    ):
+        if not _is_rate(value):
+            return (
+                False,
+                f"{field} must be a finite number between 0 and 1 -- autonomy remains locked.",
+            )
+    false_fade_rate = cast(float, false_fade_rate)
+    false_fade_rate = max(
+        false_fade_rate, compute_false_fade_rate(shadow_restores, fade_attempts)
+    )
     if false_fade_rate >= ceiling:
         return False, (
             f"false_fade_rate ({false_fade_rate:.4f}) is at or above false_fade_ceiling "

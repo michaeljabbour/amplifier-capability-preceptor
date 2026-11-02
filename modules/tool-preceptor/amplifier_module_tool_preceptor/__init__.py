@@ -363,10 +363,12 @@ class PreceptorTool:
 
     def __init__(self, coordinator: Any, config: dict[str, Any]) -> None:
         self._coordinator = coordinator
-        self._writable = bool(config.get("writable", False))
-        self._autonomous = bool(config.get("autonomous", False))
-        self._false_fade_ceiling = float(config.get("false_fade_ceiling", 0.10))
-        self._min_fade_attempts = int(config.get("min_fade_attempts", 40))
+        self._writable = config.get("writable", False) is True
+        # Preserve untrusted autonomy inputs for the strict authority predicate.
+        # Coercing "false" or "NaN" here would bypass its validation.
+        self._autonomous = config.get("autonomous", False)
+        self._false_fade_ceiling = config.get("false_fade_ceiling", 0.10)
+        self._min_fade_attempts = config.get("min_fade_attempts", 40)
         self._shadow_window_days = int(config.get("shadow_window_days", 30))
         self._shadow_window_opportunities = int(
             config.get("shadow_window_opportunities", 40)
@@ -458,7 +460,9 @@ class PreceptorTool:
 
     async def execute(self, input: dict[str, Any]) -> ToolResult:
         if ToolResult is None:
-            raise RuntimeError("The Amplifier tool adapter requires amplifier-core; use project-preceptor for standalone ledger access.")
+            raise RuntimeError(
+                "The Amplifier tool adapter requires amplifier-core; use project-preceptor for standalone ledger access."
+            )
         try:
             operation = input.get("operation")
             if not isinstance(operation, str) or not operation:
@@ -520,7 +524,9 @@ class PreceptorTool:
 
     async def _dispatch(self, operation: str, data: dict[str, Any]) -> ToolResult:
         if ToolResult is None:
-            raise RuntimeError("The Amplifier tool adapter requires amplifier-core; use project-preceptor for standalone ledger access.")
+            raise RuntimeError(
+                "The Amplifier tool adapter requires amplifier-core; use project-preceptor for standalone ledger access."
+            )
         root = self._root
         wd = self._working_dir
 
