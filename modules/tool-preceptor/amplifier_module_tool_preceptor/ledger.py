@@ -527,6 +527,24 @@ def write_state(root: Path, state: dict[str, Any]) -> None:
     _git_commit(root, [state_path(root)], "state: update trust counters")
 
 
+def _validate_state_counters(
+    state: dict[str, Any],
+    *,
+    fade_attempts_delta: int = 0,
+    shadow_restores_delta: int = 0,
+) -> None:
+    """Reject invalid history before a cue transition or counter write begins."""
+    for field, delta in (
+        ("fade_attempts", fade_attempts_delta),
+        ("shadow_restores", shadow_restores_delta),
+    ):
+        if not gates.is_counter(state.get(field)) or not gates.is_counter(delta):
+            raise LedgerError(
+                f"{field} and its delta must be nonnegative integers; "
+                "invalid history cannot be converted into measured evidence."
+            )
+
+
 def update_state(
     root: Path,
     cfg: dict[str, Any],
@@ -539,15 +557,11 @@ def update_state(
     correct behavior, not a bug)."""
     with _locked(state_path(root)):
         state = read_state(root)
-        for field, delta in (
-            ("fade_attempts", fade_attempts_delta),
-            ("shadow_restores", shadow_restores_delta),
-        ):
-            if not gates.is_counter(state.get(field)) or not gates.is_counter(delta):
-                raise LedgerError(
-                    f"{field} and its delta must be nonnegative integers; "
-                    "invalid history cannot be converted into measured evidence."
-                )
+        _validate_state_counters(
+            state,
+            fade_attempts_delta=fade_attempts_delta,
+            shadow_restores_delta=shadow_restores_delta,
+        )
         state["fade_attempts"] += fade_attempts_delta
         state["shadow_restores"] += shadow_restores_delta
         state["false_fade_rate"] = gates.compute_false_fade_rate(
@@ -1064,6 +1078,7 @@ def shadow_cue(
     cfg: dict[str, Any],
     working_dir: Path | None = None,
 ) -> dict[str, Any]:
+    _validate_state_counters(read_state(root))
     doc = read_ledger_doc(root, provider, model, domain, working_dir=working_dir)
     cue = _find_cue(doc, cue_id)
     if cue is None:
@@ -1099,6 +1114,7 @@ def restore_cue(
     cfg: dict[str, Any] | None = None,
     working_dir: Path | None = None,
 ) -> dict[str, Any]:
+    _validate_state_counters(read_state(root))
     doc = read_ledger_doc(root, provider, model, domain, working_dir=working_dir)
     cue = _find_cue(doc, cue_id)
     if cue is None:
