@@ -20,7 +20,7 @@ tools:
     # (amplifier-bundle-wayfinder/behaviors/modules/tool-preceptor) and the session
     # refused to start in strict mode. Behaviors CAN use ../modules; agent files
     # cannot use any relative form. See AGENTS.md.
-    source: git+https://github.com/michaeljabbour/amplifier-bundle-preceptor@main#subdirectory=modules/tool-preceptor
+    source: git+https://github.com/michaeljabbour/amplifier-capability-preceptor@main#subdirectory=modules/tool-preceptor
     config:
       writable: false
 ---
